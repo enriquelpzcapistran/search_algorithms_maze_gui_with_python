@@ -1,24 +1,23 @@
-#ALGORITHMIC MAZE RUNNER
-#Made by Garreth Lee (2021)
-
 import pygame
 import random
 import time
 import sys
+import numpy as np
+import math
 from pygame.draw import rect
 from pygame.constants import MOUSEBUTTONDOWN
 
 
-##################### CLASSES #######################
+##################### CLASES #######################
 
-#NODE IN FRONTIER
+#Nodos Frontier
 class Node():
     def __init__(self, parent, state, action):
         self.parent = parent #node
         self.state = state #tuple
         self.action = action #tuple
 
-#DEPTH FIRST SEARCH (DFS)
+#Profundidad
 class StackFrontier():
     def __init__(self):
         self.frontier = []
@@ -40,7 +39,7 @@ class StackFrontier():
             self.frontier.remove(node)
             return [node]
 
-#BREADTH FIRST SEARCH (BFS)
+#Amplitud
 class QueueFrontier(StackFrontier):
     def remove(self):
         if self.empty():
@@ -50,7 +49,7 @@ class QueueFrontier(StackFrontier):
             self.frontier.remove(node)
             return [node]
 
-#A* SEARCH FRONTIER (MANHATTAN DISTANCE HEURISTIC FUNCTION)
+#A*
 class ManhattanFrontier(StackFrontier):
     def remove(self, cost):
         if self.empty():
@@ -72,7 +71,7 @@ class ManhattanFrontier(StackFrontier):
 
             return best_neighbor
 
-#MAZE OBJECT
+#Objeto/Laberinto
 class Maze():
     def __init__(self, board, algorithm):
         self.board = board
@@ -126,11 +125,328 @@ class Maze():
         start = Node(parent = None, state = self.start, action = None)
 
         if self.algorithm == 1:
-            frontier = StackFrontier()
+            frontier = StackFrontier() #Profundidad
         elif self.algorithm == 2:
-            frontier = QueueFrontier()
+            frontier = QueueFrontier() #Amplitud
         elif self.algorithm == 3:
-            frontier = ManhattanFrontier()
+            frontier = ManhattanFrontier() #A*
+        elif self.algorithm == 4:
+            pass                   #Primero el Mejor
+        elif self.algorithm == 5:
+            pass                    #Conecta 3
+
+            
+            ###### INICIA CONECTA 3 ######
+            #Colores del juego
+            BLUE = (0,0,255)
+            BLACK = (0,0,0)
+            RED = (255,0,0)
+            YELLOW = (255,255,0)
+            #Tamaño del tablero
+            ROW_COUNT = 3
+            COLUMN_COUNT = 3
+            #Identificadores(Saber turno)
+            PLAYER = 0
+            AI = 1
+            #Identificadores(Para saber de quien es cada pieza)
+            PLAYER_PIECE = 1
+            AI_PIECE = 2
+            #Usado para la IA(calculo y evaluación de movimientos) 
+            WINDOW_LENGTH = 4
+            EMPTY = 0
+
+            #Flag para verificar si hubo un ganador
+            winner = False
+
+            #Método de numpy para crear array de 2 dimensiones(Tablero)
+            def create_board():
+                board2 = np.zeros((ROW_COUNT,COLUMN_COUNT))
+                return board2
+            #Movimientos
+            def drop_piece(board2, row, col, piece):
+                board2[row][col] = piece
+            #Valida si hay espacio para que "caiga" la pieza
+            def is_valid_location(board2, col):
+                return board2[ROW_COUNT-1][col] == 0
+
+            def get_next_open_row(board2, col):
+                for r in range(ROW_COUNT):
+                    if board2[r][col] == 0:
+                        return r
+
+            def print_board(board2):
+                print(np.flip(board2,0))
+
+            def winning_move(board2, piece):
+                #Verifica horizontal de 3
+                for c in range(COLUMN_COUNT-2):
+                    for r in range(ROW_COUNT):
+                        if board2[r][c] == piece and board2[r][c+1] == piece and board2[r][c+2] == piece:
+                            return True
+                #Verifica vertical de 3
+                for c in range(COLUMN_COUNT):
+                    for r in range(ROW_COUNT-2):
+                        if board2[r][c] == piece and board2[r+1][c] == piece and board2[r+2][c] == piece:
+                            return True
+                #Verifica las diagonales de 3
+                for c in range(COLUMN_COUNT-2):
+                    for r in range(ROW_COUNT-2):
+                        if board2[r][c] == piece and board2[r+1][c+1] == piece and board2[r+2][c+2] == piece:
+                            return True
+
+                #Verifica diagonales invertidas de 3
+                for c in range(COLUMN_COUNT-3):
+                    for r in range(3,ROW_COUNT):
+                        if board2[r][c] == piece and board2[r-1][c+1] == piece and board2[r-2][c+2] == piece:
+                            return True
+
+            def evaluate_window(window, piece):
+                score = 0
+                opp_piece = PLAYER_PIECE
+                if piece == PLAYER_PIECE:
+                    opp_piece = AI_PIECE
+
+                if window.count(piece) == 3:
+                    score += 100
+                elif window.count(piece) == 3 and window.count(EMPTY) == 1:
+                    score += 5
+                elif window.count(piece) == 2 and window.count(EMPTY) == 2:
+                    score += 2
+
+                if window.count(opp_piece) == 3 and window.count(EMPTY) == 1:
+                    score -= 4
+
+                return score 
+
+            def score_position(board2, piece):
+                score = 0
+                #Da preferencia a movimientos en el centro del tablero(da mayor potencial de combinaciones)
+                center_array = [int(i) for i in list(board2[:, COLUMN_COUNT//2])]
+                center_count = center_array.count(piece)
+                score += center_count * 4
+
+                #Calcula puntaje horizontal
+                
+                for r in range(ROW_COUNT):
+                    row_array = [int(i) for i in list(board2[r,:])]
+                    for c in range(COLUMN_COUNT-3):
+                        window = row_array[c:c+WINDOW_LENGTH]
+                        score += evaluate_window(window, piece)
+                
+                ##Calcula puntaje Vertical
+                for c in range(COLUMN_COUNT):
+                    col_array = [int(i) for i in list(board2[:,c])]
+                    for r in range(ROW_COUNT-3):
+                        window = col_array[r:r+WINDOW_LENGTH]
+                        score += evaluate_window(window, piece)
+
+                for r in range(ROW_COUNT-3):
+                    for c in range(COLUMN_COUNT-3):
+                        window = [board2[r+i][c+i] for i in range(WINDOW_LENGTH)]
+                        score += evaluate_window(window, piece)
+
+                for r in range(ROW_COUNT-3):
+                    for c in range(COLUMN_COUNT-3):
+                        window = [board2[r+3-i][c+i] for i in range(WINDOW_LENGTH)]
+                        score += evaluate_window(window, piece)
+
+                return score
+
+            def is_terminal_node(board2):
+                return winning_move(board2, PLAYER_PIECE) or winning_move(board2, AI_PIECE) or len(get_valid_locations(board2)) == 0
+
+            #Minimax
+            def minimax(board2,depth, alpha, beta, maximizingPlayer):
+                valid_locations = get_valid_locations(board2)
+                is_terminal = is_terminal_node(board2)
+                if depth == 0 or is_terminal:
+                    if is_terminal:
+                        if winning_move(board2, AI_PIECE):
+                            return (None, 100000000000)
+                        elif winning_move(board2, PLAYER_PIECE):
+                            return (None, -10000000000)   
+                        else: #game over no more moves  
+                            return (None, 0)
+                    else: #depth is zero
+                        return (None, score_position(board2, AI_PIECE))
+
+                if maximizingPlayer:
+                    value = -math.inf
+                    column = random.choice(valid_locations)
+                    for col in valid_locations:
+                        row = get_next_open_row(board2, col)
+                        b_copy = board2.copy()
+                        drop_piece(b_copy, row, col, AI_PIECE)
+                        new_score = minimax(b_copy, depth-1, alpha, beta, False)[1]
+                        if new_score > value:
+                            value = new_score
+                            column = col
+                        alpha = max(alpha, value)
+                        if alpha >= beta:
+                            break
+                    return column, value
+
+                else: #minimizing al oponente
+                    value = math.inf
+                    column = random.choice(valid_locations)
+                    for col in valid_locations:
+                        row = get_next_open_row(board2, col)
+                        b_copy = board2.copy()
+                        drop_piece(board2, row, col, PLAYER_PIECE)
+                        new_score = minimax(b_copy, depth-1, alpha, beta, True)[1]
+                        if new_score < value:
+                            value = new_score
+                            column = col
+                        beta = min(beta, value)
+                        if alpha >= beta:
+                            break
+                    return column, value
+                
+
+
+
+            def get_valid_locations(board2):
+                valid_locations = []
+                for col in range(COLUMN_COUNT):
+                    if is_valid_location(board2, col):
+                        valid_locations.append(col)
+                return valid_locations
+
+
+            def pick_best_move(board2, piece):
+                valid_locations = get_valid_locations(board2)
+                best_score = 0
+                best_col = random.choice(valid_locations)
+                for col in valid_locations:
+                    row = get_next_open_row(board2, col)
+                    temp_board = board2.copy()
+                    drop_piece(temp_board, row, col, piece)
+                    score = score_position(temp_board, piece)
+                    #Actualizacion de puntajes despues de cada turno
+                    if score > best_score:
+                        best_score = score
+                        best_col = col
+                        
+                return best_col
+
+
+            def draw_board(board2):
+                for c in range(COLUMN_COUNT):
+                    for r in range(ROW_COUNT):
+                        pygame.draw.rect(screen, BLUE, (c*SQUARESIZE, r*SQUARESIZE+SQUARESIZE, SQUARESIZE, SQUARESIZE))
+                        pygame.draw.circle(screen, BLACK, (int(c*SQUARESIZE+SQUARESIZE/2), int(r*SQUARESIZE+SQUARESIZE+SQUARESIZE/2)), RADIUS)
+                
+                for c in range(COLUMN_COUNT):
+                    for r in range(ROW_COUNT):		
+                        if board2[r][c] == PLAYER_PIECE:
+                            pygame.draw.circle(screen, RED, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
+                        elif board2[r][c] == AI_PIECE: 
+                            pygame.draw.circle(screen, YELLOW, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
+                pygame.display.update()
+
+
+            board2 = create_board()
+            print_board(board2)
+            game_over = False
+
+            pygame.init()
+
+            SQUARESIZE = 120
+
+            width = COLUMN_COUNT * SQUARESIZE
+            height = (ROW_COUNT+1) * SQUARESIZE
+
+            size = (width, height)
+            RADIUS = int(SQUARESIZE/2 - 5)
+
+            screen = pygame.display.set_mode(size)
+            draw_board(board2)
+            pygame.display.update()
+
+            myfont = pygame.font.SysFont("monospace", 40)
+
+            turn = random.randint(PLAYER, AI)
+
+            while not game_over:
+
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        sys.exit()
+
+                    if event.type == pygame.MOUSEMOTION:
+                        pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
+                        posx = event.pos[0]
+                        if turn == PLAYER:
+                            pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
+                            pygame.display.update()
+
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
+                        
+                        #Input del usuario
+                        if turn == PLAYER:
+                            posx = event.pos[0]
+                            col = int(math.floor(posx/SQUARESIZE))  
+
+                            if is_valid_location(board2,col):
+                                row = get_next_open_row(board2, col)
+                                drop_piece(board2, row, col, PLAYER_PIECE)
+
+                                if winning_move(board2,PLAYER_PIECE):
+                                    label = myfont.render("Usuario Ganó", 1, BLUE)
+                                    screen.blit(label, (10,10))
+                                    game_over = True
+                                    winner = True
+
+                                turn += 1
+                                turn = turn % 2 
+
+                                print_board(board2) 
+                                draw_board(board2)
+
+                                if game_over:
+                                    pygame.time.wait(3000)
+                    #Input de la IA   
+                    if turn == AI and not game_over:
+
+                        #Aumentar Depth al minimax() para mayor dificultad
+                        col, minimax_score = minimax(board2, 3, -math.inf, math.inf, True)
+
+                        try: 
+                            if is_valid_location(board2,col):
+                            # pygame.time.wait(500)
+                                row = get_next_open_row(board2, col)
+                                drop_piece(board2, row, col, AI_PIECE)
+                        except ValueError as ve:
+                            label = myfont.render("Empate", 1, BLUE)
+                            screen.blit(label, (10,10))
+                            game_over = True
+                            pygame.time.wait(3000)
+                            
+                        if winning_move(board2, AI_PIECE):
+                            label = myfont.render("IA Ganó", 1, RED)
+                            screen.blit(label, (10,10))
+                            game_over = True
+                            winner = True
+                                
+
+                        print_board(board2) 
+                        draw_board(board2)
+
+                        turn += 1
+                        turn = turn % 2 
+
+                        if game_over:
+                            if winner == False:
+                                label = myfont.render("Empate", 1, BLUE)
+                                screen.blit(label, (10,10))
+                                game_over = True
+                            pygame.time.wait(3000)
+
+
+
+
+
 
         frontier.add(start)
         
@@ -166,7 +482,7 @@ class Maze():
                         child = Node(parent = node, state = state, action = action)
                         frontier.add(child)
 
-#DROPDOWN MENU FOR ALGORITHM SELECTION
+#Menu(Dropdown) de Algoritmos de Búsqueda
 class DropDown():
 
     def __init__(self, x,y,w,h,color, highlight_color, font, options, selected = 0):
@@ -234,7 +550,7 @@ class DropDown():
 
         return -1
 
-#CHECKBOX TO SELECT SHOW MOVES OR NOT
+#Opción de mostrar animación completa o no(Checkbox)
 class Checkbox():
     def __init__(self, rect, text, font):
         self.rect = rect
@@ -274,7 +590,7 @@ class Checkbox():
         return self.selected
         
 
-################# PROGRAM #####################
+################# Programa Principal #####################
 
 size = (900,600)
 w,h = size
@@ -324,22 +640,22 @@ LARGE_TEXT = pygame.font.SysFont('segoeuisemibold', 30)
 BTN_TEXT = pygame.font.SysFont('segoeuisemibold', 22) 
 
 
-reset_button = pygame.Rect(600,100,100,50)
-algo_list = DropDown(600,200,190,40, WHITE, (100,200,255), BTN_TEXT, ['¿Cuál Algoritmo?','Profundidad','Amplitud','A*'])
+reset_button = pygame.Rect(600,50,100,50)
+algo_list = DropDown(600,120,190,40, WHITE, (100,200,255), BTN_TEXT, ['¿Cuál Algoritmo?','Profundidad','Amplitud','A*','Primero el Mejor','Ir a Conecta 3'])
 solve_button = pygame.Rect(600,475,100,50)
 checkbox = Checkbox(pygame.Rect(600,425,25,25), '¿Visualizar Camino?', BTN_TEXT)
-play_button = pygame.Rect(w/2-50,350,100,50)
+play_button = pygame.Rect(w/2/2+20,350,400,50)
 
 while running:  
     events = pygame.event.get()
     for event in events:
 
-        #QUIT PROGRAM
+        #Cerrar Programa
         if event.type == pygame.QUIT:
             running = False
             break
 
-        #HOME PAGE
+        #Presentación Inicial
         if homepage:
             #TITLE
             title = LARGE_TEXT.render("Proyecto IA: Búsquedas", 1, WHITE)
@@ -347,7 +663,7 @@ while running:
             title_rect.center = (w/2, 80)
             screen.blit(title, title_rect)
 
-            #INSTRUCTIONS
+            #Instrucciones(?)
             instructions = [
             ]
 
@@ -357,9 +673,9 @@ while running:
                 line_rect.center = (w/2, 150 + i*40)
                 screen.blit(line, line_rect)
 
-            #PLAY BUTTON
+            #Iniciar(Botón)
             pygame.draw.rect(screen, WHITE, play_button)
-            play = BTN_TEXT.render('Iniciar', 1, BLACK)
+            play = BTN_TEXT.render('Iniciar Búsqueda(Caminos/Laberinto)', 1, BLACK)
             screen.blit(play, (play_button.x + 25, play_button.y + 12.5))
 
             mpos = pygame.mouse.get_pos()
@@ -368,60 +684,59 @@ while running:
                 if event.type == MOUSEBUTTONDOWN and event.button == 1:
                     homepage = False
                     screen.fill(BLACK)
-                
-            
+
         else:
 
-            #DRAWS THE EMPTY BOARD
+            #Dibujar tablero nuevo(todo en BLACK)
             if not board_drawn:
                 draw_board()
                 board_drawn = True
 
-            #draws the reset button
+            #Dibujar Botón de Borrar(RESET)
             pygame.draw.rect(screen, WHITE, reset_button)
             reset_button_text = BTN_TEXT.render("Borrar", 1, (BLACK))
             screen.blit(reset_button_text, (reset_button.x + 22.5, reset_button.y + 12.5))
 
-            #draws the solve button
+            #Dibujar Botón Iniciar
             pygame.draw.rect(screen, WHITE, solve_button)
             solve_button_text = BTN_TEXT.render('Iniciar',1,BLACK)
             screen.blit(solve_button_text, (solve_button.x + 22.5, solve_button.y + 12.5))
             
-            #DROPDOWN MENU
+            #Dibujar Menu(Dropdown)
             selected_option = algo_list.update(events)
             if selected_option > 0:
                 algorithm = selected_option
             algo_list.draw(screen)
 
-            #CHECKBOX MENU
+            #Dibujar el Checkbox
             checkbox_filled = checkbox.update(events)
             checkbox.draw(screen)
 
-            #IF MOUSE IS PRESSED
+            #Si el mouse está presionado...
             if event.type == pygame.MOUSEBUTTONDOWN:
                 
                 cursor_drag = True
                 button = event.button
                 mousePos = pygame.mouse.get_pos()
 
-                #SOLVE BUTTON
+                #Boton(Iniciar/Resolver)
                 if solve_button.collidepoint(mousePos):
                     
-                    #IF TOO LITTLE WALLS
+                    #Pocos Muros
                     if sum(sum(row) for row in board) < 1 and algorithm in (2,3):
                         
                         rect = pygame.Rect(600,565,100,50)
-                        msg = BTN_TEXT.render('Pocas paredes', 1, RED)
+                        msg = BTN_TEXT.render('Advertencia 2(Pocas paredes)', 1, RED)
                         screen.blit(msg, (rect.x,rect.y))
 
                     else:
-                        #REMOVE MORE WALLS TEXT
+                        #Demasiados Muros
                         
                         #rect = pygame.Rect(600,565,100,50)
-                        msg = BTN_TEXT.render('Eliminar paredes', 1, BLACK)
+                        msg = BTN_TEXT.render('Advertencia 3(Demasiadas paredes)', 1, BLACK)
                         #screen.blit(msg, (rect.x,rect.y))
 
-                        #EMPTY BOARD 
+                        #Tablero Nuevo
                         for i in range(len(board)):
                             for j in range(len(board)):
                                 if not board[i][j] and (i,j) not in ((0,0),(9,9)):
@@ -431,27 +746,27 @@ while running:
                                     
                         if algorithm != 0:
 
-                            #REMOVE PICK AN ALGORITHM TEXT
+                            #Elegir algoritmo
                             rect = pygame.Rect(600,50,100,50)
                             msg = BTN_TEXT.render('¿Cuál Algoritmo?', 1, BLACK)
                             screen.blit(msg, (rect.x,rect.y))
 
-                            #MAKE MAZE OBJECT
+                            #Generando Objeto Laberinto
                             maze = Maze(board, algorithm)
                             pygame.display.set_caption('Cargando...')
                             solved = maze.solve(checkbox_filled)
 
-                            #PREVENT USER FROM CLICKING WHILE ALGORITHM IS RUNNING
+                            #Prevenir al usuario usar el click durante la generación del camino
                             pygame.event.set_blocked(MOUSEBUTTONDOWN)
 
                             if solved and checkbox_filled:
 
-                                #REMOVE UNSOLVABLE TEXT
+                                #Irresolvible
                                 rect = pygame.Rect(600,535,100,50)
-                                msg = BTN_TEXT.render('Error 1', 1, BLACK)
+                                msg = BTN_TEXT.render('Advertencia 1(Irresolvible)', 1, BLACK)
                                 screen.blit(msg, (rect.x,rect.y))
 
-                                #SHOW ALGORITHM PATHFINDING
+                                #Mostrar Pathfinding
                                 pygame.display.set_caption('Proyecto IA: Búsquedas')
                                 steps, solution = solved
                                 for step in steps:
@@ -465,7 +780,7 @@ while running:
 
                             if solved:
                                 solution = solution if checkbox_filled else solved
-                                #SHOW FINAL SOLUTION
+                                #Mostrar Solución FINAL
                                 for move in solution:
                                     if move not in ((0,0),(9,9)):
                                         time.sleep(0.1)
@@ -475,7 +790,7 @@ while running:
                                         pygame.draw.rect(screen, ORANGE, box, 3)
                                         pygame.display.update()
                             
-                            #IF UNSOLVABLE
+                            #Si es IRRESOLVIBLE
                             else:
                                 rect = pygame.Rect(600,535,100,50)
                                 msg = BTN_TEXT.render('Error 1', 1, RED)
@@ -483,13 +798,13 @@ while running:
 
                             pygame.event.set_allowed(MOUSEBUTTONDOWN)
 
-                        #IF ALGORITHM NOT YET PICKED
+                        #Si el algoritmo no fue seleccionado no dejar proseguir el programa
                         else:
                             rect = pygame.Rect(600,50,100,50)
                             msg = BTN_TEXT.render('¿Cuál Algoritmo?', 1, RED)
                             screen.blit(msg, (rect.x,rect.y))
 
-                #RESET BUTTON
+                #Boton Borrar
                 if reset_button.collidepoint(mousePos):
                     board_drawn = False
                     board = []
@@ -500,7 +815,7 @@ while running:
                         board_drawn = True
                     
 
-                #CLICK ON SQUARE(S)   
+                #Click = Cuadrados/YELLOW/PURPLE/ORANGE/   
                 else:
                     for x,y in coordinates:
                         if (x,y) not in ((50,50),(500,500)):
@@ -516,6 +831,7 @@ while running:
                                     board[int(y/50-1)][int(x/50-1)] = False                        
                                 break
             
+            #Muros fijos iniciales
             pygame.draw.rect(screen, PURPLE, pygame.Rect(100,100,50,50))
             board[int(100/50-1)][int(100/50-1)] = True
             pygame.draw.rect(screen, PURPLE, pygame.Rect(100,150,50,50))     
@@ -558,11 +874,11 @@ while running:
             pygame.draw.rect(screen, PURPLE, pygame.Rect(450,100,50,50))
             board[int(100/50-1)][int(450/50-1)] = True
             
-            #IF MOUSE IS LIFTED UP
+            #Mouse "Release"
             if event.type == pygame.MOUSEBUTTONUP:
                 cursor_drag = False
             
-            #IF MOUSE IS DRAGGED AROUND
+            #Mouse "Arrastrado con click"
             if event.type == pygame.MOUSEMOTION:
                 if cursor_drag:
                     mousePos_x, mousePos_y = pygame.mouse.get_pos()
