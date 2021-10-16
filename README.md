@@ -7,6 +7,7 @@
 ### Running the .py File
 - Clone the repository
 - Install dependencies by entering `pip install - r requirements.txt`
+- And `pip install numpy`
 - Run the .py file
 
 ### Files
