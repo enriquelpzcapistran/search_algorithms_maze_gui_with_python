@@ -13,9 +13,9 @@ from pygame.constants import MOUSEBUTTONDOWN
 #Nodos Frontier
 class Node():
     def __init__(self, parent, state, action):
-        self.parent = parent #node
-        self.state = state #tuple
-        self.action = action #tuple
+        self.parent = parent #Nodo
+        self.state = state #Tupla
+        self.action = action #Tupla
 
 #Profundidad
 class StackFrontier():
@@ -70,6 +70,15 @@ class ManhattanFrontier(StackFrontier):
                 self.frontier.remove(neighbor)
 
             return best_neighbor
+
+
+#BestFirst
+class BestFirstFrontier(StackFrontier):
+    def remove(self, cost):
+        if self.empty():
+            raise Exception('Frontier already empty!')
+        else:
+            pass
 
 #Objeto/Laberinto
 class Maze():
@@ -131,7 +140,7 @@ class Maze():
         elif self.algorithm == 3:
             frontier = ManhattanFrontier() #A*
         elif self.algorithm == 4:
-            pass                   #Primero el Mejor
+            frontier = BestFirstFrontier() #Primero el Mejor
         elif self.algorithm == 5:
             pass                    #Conecta 3
 
@@ -676,7 +685,7 @@ reset_button = pygame.Rect(600,50,100,50)
 algo_list = DropDown(600,120,190,40, WHITE, RED, BTN_TEXT, ['¿Cuál Algoritmo?','Profundidad','Amplitud','A*','Primero el Mejor','Ir a Conecta 3'])
 solve_button = pygame.Rect(600,475,100,50)
 checkbox = Checkbox(pygame.Rect(600,425,25,25), '¿Visualizar Camino?', BTN_TEXT)
-play_button = pygame.Rect(w/2/2+20,350,400,50)
+play_button = pygame.Rect(w/2/2+20,450,400,50)
 
 while running:  
     events = pygame.event.get()
@@ -689,14 +698,14 @@ while running:
 
         #Presentación Inicial
         if homepage:
-            #TITLE
+            #Titulo
             title = LARGE_TEXT.render("Proyecto IA: Búsquedas", 1, WHITE)
             title_rect = title.get_rect()
             title_rect.center = (w/2, 40)
             screen.blit(title, title_rect)
 
             #Integrantes
-            integrantes = ["INTEGRANTES", "Bañuelos Camacho Itzel Carolina", "Lopez Capistran Enrique Ariel", "Quintero Aguilar Jesús Emilio", "Sotelo Rivas Manuel Alberto"]
+            integrantes = ["INTEGRANTES", "Bañuelos Camacho Itzel Carolina", "Castro Domínguez Xaviel", "Lopez Capistran Enrique Ariel", "Quintero Aguilar Jesús Emilio", "Rendon Ochoa Javier Iran", "Sotelo Rivas Manuel Alberto"]
             for i, text in enumerate(integrantes):
                 line = BTN_TEXT.render(text, 1, WHITE)
                 line_rect = line.get_rect()
