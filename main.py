@@ -499,7 +499,7 @@ class DropDown():
     def draw(self, surface):
         pygame.draw.rect(surface, self.highlight_color if self.menu_active else self.color, self.rect)
         pygame.draw.rect(surface, (0,0,0), self.rect, 2) #border
-        msg = self.font.render(self.options[self.selected], 1, (0,0,0))
+        msg = self.font.render(self.options[self.selected], 1, (255, 255, 255) if self.menu_active else (0, 0, 0))
         surface.blit(msg, msg.get_rect(center = self.rect.center))
 
         if self.draw_menu:
@@ -641,7 +641,7 @@ BTN_TEXT = pygame.font.SysFont('segoeuisemibold', 22)
 
 
 reset_button = pygame.Rect(600,50,100,50)
-algo_list = DropDown(600,120,190,40, WHITE, (100,200,255), BTN_TEXT, ['¿Cuál Algoritmo?','Profundidad','Amplitud','A*','Primero el Mejor','Ir a Conecta 3'])
+algo_list = DropDown(600,120,190,40, WHITE, RED, BTN_TEXT, ['¿Cuál Algoritmo?','Profundidad','Amplitud','A*','Primero el Mejor','Ir a Conecta 3'])
 solve_button = pygame.Rect(600,475,100,50)
 checkbox = Checkbox(pygame.Rect(600,425,25,25), '¿Visualizar Camino?', BTN_TEXT)
 play_button = pygame.Rect(w/2/2+20,350,400,50)
@@ -660,14 +660,12 @@ while running:
             #TITLE
             title = LARGE_TEXT.render("Proyecto IA: Búsquedas", 1, WHITE)
             title_rect = title.get_rect()
-            title_rect.center = (w/2, 80)
+            title_rect.center = (w/2, 40)
             screen.blit(title, title_rect)
 
-            #Instrucciones(?)
-            instructions = [
-            ]
-
-            for i, text in enumerate(instructions):
+            #Integrantes
+            integrantes = ["INTEGRANTES", "Bañuelos Camacho Itzel Carolina", "Lopez Capistran Enrique Ariel", "Quintero Aguilar Jesús Emilio", "Sotelo Rivas Manuel Alberto"]
+            for i, text in enumerate(integrantes):
                 line = BTN_TEXT.render(text, 1, WHITE)
                 line_rect = line.get_rect()
                 line_rect.center = (w/2, 150 + i*40)
@@ -684,6 +682,11 @@ while running:
                 if event.type == MOUSEBUTTONDOWN and event.button == 1:
                     homepage = False
                     screen.fill(BLACK)
+                elif event.type == pygame.MOUSEMOTION:
+                    pygame.draw.rect(screen, RED, play_button)
+                    play = BTN_TEXT.render('Iniciar Búsqueda(Caminos/Laberinto)', 1, WHITE)
+                    screen.blit(play, (play_button.x + 25, play_button.y + 12.5))
+
 
         else:
 
@@ -712,12 +715,27 @@ while running:
             checkbox_filled = checkbox.update(events)
             checkbox.draw(screen)
 
+            mousePos = pygame.mouse.get_pos()
+
+            # Efecto hover
+            if event.type == pygame.MOUSEMOTION:
+
+                if solve_button.collidepoint(mousePos): # Botón iniciar
+                    pygame.draw.rect(screen, RED, solve_button)
+                    solve_button_text = BTN_TEXT.render('Iniciar', 1, WHITE)
+                    screen.blit(solve_button_text, (solve_button.x + 22.5, solve_button.y + 12.5))
+
+                elif reset_button.collidepoint(mousePos): # Botón borrar
+                    pygame.draw.rect(screen, RED, reset_button)
+                    reset_button_text = BTN_TEXT.render("Borrar", 1, WHITE)
+                    screen.blit(reset_button_text, (reset_button.x + 22.5, reset_button.y + 12.5))
+
+
             #Si el mouse está presionado...
             if event.type == pygame.MOUSEBUTTONDOWN:
                 
                 cursor_drag = True
                 button = event.button
-                mousePos = pygame.mouse.get_pos()
 
                 #Boton(Iniciar/Resolver)
                 if solve_button.collidepoint(mousePos):
@@ -725,7 +743,7 @@ while running:
                     #Pocos Muros
                     if sum(sum(row) for row in board) < 1 and algorithm in (2,3):
                         
-                        rect = pygame.Rect(600,565,100,50)
+                        rect = pygame.Rect(600,535,100,50)
                         msg = BTN_TEXT.render('Advertencia 2(Pocas paredes)', 1, RED)
                         screen.blit(msg, (rect.x,rect.y))
 
@@ -747,7 +765,7 @@ while running:
                         if algorithm != 0:
 
                             #Elegir algoritmo
-                            rect = pygame.Rect(600,50,100,50)
+                            rect = pygame.Rect(600,535,100,50)
                             msg = BTN_TEXT.render('¿Cuál Algoritmo?', 1, BLACK)
                             screen.blit(msg, (rect.x,rect.y))
 
