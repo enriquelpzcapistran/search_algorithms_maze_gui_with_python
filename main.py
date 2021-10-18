@@ -152,7 +152,7 @@ class Maze():
             PLAYER_PIECE = 1
             AI_PIECE = 2
             #Usado para la IA(calculo y evaluación de movimientos) 
-            WINDOW_LENGTH = 4
+            WINDOW_LENGTH = 3
             EMPTY = 0
 
             #Flag para verificar si hubo un ganador
@@ -195,8 +195,8 @@ class Maze():
                             return True
 
                 #Verifica diagonales invertidas de 3
-                for c in range(COLUMN_COUNT-3):
-                    for r in range(3,ROW_COUNT):
+                for c in range(COLUMN_COUNT-2):
+                    for r in range(2,ROW_COUNT):
                         if board2[r][c] == piece and board2[r-1][c+1] == piece and board2[r-2][c+2] == piece:
                             return True
 
@@ -206,14 +206,14 @@ class Maze():
                 if piece == PLAYER_PIECE:
                     opp_piece = AI_PIECE
 
-                if window.count(piece) == 3:
+                if window.count(piece) == 2:
                     score += 100
-                elif window.count(piece) == 3 and window.count(EMPTY) == 1:
+                elif window.count(piece) == 1 and window.count(EMPTY) == 0:
                     score += 5
-                elif window.count(piece) == 2 and window.count(EMPTY) == 2:
+                elif window.count(piece) == 1 and window.count(EMPTY) == 1:
                     score += 2
 
-                if window.count(opp_piece) == 3 and window.count(EMPTY) == 1:
+                if window.count(opp_piece) == 2 and window.count(EMPTY) == 0:
                     score -= 4
 
                 return score 
@@ -223,7 +223,7 @@ class Maze():
                 #Da preferencia a movimientos en el centro del tablero(da mayor potencial de combinaciones)
                 center_array = [int(i) for i in list(board2[:, COLUMN_COUNT//2])]
                 center_count = center_array.count(piece)
-                score += center_count * 4
+                score += center_count * 3
 
                 #Calcula puntaje horizontal
                 
@@ -366,10 +366,16 @@ class Maze():
             myfont = pygame.font.SysFont("monospace", 40)
 
             turn = random.randint(PLAYER, AI)
+            firstTurn = turn
+            if firstTurn == 0:
+                turnNum = 1 #Contador para cuando inicie el juego el usuario y no la IA
+            else:
+                turnNum = -1
 
             while not game_over:
 
                 for event in pygame.event.get():
+                    
                     if event.type == pygame.QUIT:
                         sys.exit()
 
@@ -391,6 +397,8 @@ class Maze():
                             if is_valid_location(board2,col):
                                 row = get_next_open_row(board2, col)
                                 drop_piece(board2, row, col, PLAYER_PIECE)
+                                print_board(board2) 
+                                draw_board(board2)
 
                                 if winning_move(board2,PLAYER_PIECE):
                                     label = myfont.render("Usuario Ganó", 1, BLUE)
@@ -408,9 +416,10 @@ class Maze():
                                     pygame.time.wait(3000)
                     #Input de la IA   
                     if turn == AI and not game_over:
+                        pick_best_move(board2, AI_PIECE)
 
                         #Aumentar Depth al minimax() para mayor dificultad
-                        col, minimax_score = minimax(board2, 3, -math.inf, math.inf, True)
+                        col, minimax_score = minimax(board2, 2, -math.inf, math.inf, True)
 
                         try: 
                             if is_valid_location(board2,col):
@@ -428,20 +437,43 @@ class Maze():
                             screen.blit(label, (10,10))
                             game_over = True
                             winner = True
-                                
+                            print_board(board2) 
+                            draw_board(board2)
+                            pygame.time.wait(3000)
 
                         print_board(board2) 
+
+                        if 0 not in board2 and winner == False:
+                            #print("Test")
+                            label = myfont.render("Empate", 1, BLUE)
+                            screen.blit(label, (10,10))
+                            game_over = True
+
+                        turnNum += 1
+                        if turnNum == 5 and winner == False:
+                            label = myfont.render("Empate", 1, BLUE)
+                            screen.blit(label, (10,10))
+                            game_over = True
+                        print(turnNum)
+                        
                         draw_board(board2)
+                        if 0 not in board2:
+                            pygame.time.wait(3000)
 
+                        if turnNum == 6:
+                            pygame.time.wait(3000)
+
+                        
                         turn += 1
-                        turn = turn % 2 
+                        turn = turn % 2
 
+                        
                         if game_over:
                             if winner == False:
                                 label = myfont.render("Empate", 1, BLUE)
                                 screen.blit(label, (10,10))
                                 game_over = True
-                            pygame.time.wait(3000)
+                                pygame.time.wait(3000)
 
 
 
