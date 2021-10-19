@@ -72,13 +72,27 @@ class ManhattanFrontier(StackFrontier):
             return best_neighbor
 
 
-#BestFirst
+#Primero el mejor
 class BestFirstFrontier(StackFrontier):
     def remove(self, cost):
         if self.empty():
             raise Exception('Frontier already empty!')
         else:
-            pass
+            best_neighbor = set()
+            best_neighbor_cost = 0
+            for node in self.frontier:
+                x,y = node.state
+                absolute_cost = cost + abs(x-9) + abs(y-9)
+                if len(best_neighbor) == 0 or absolute_cost < best_neighbor_cost:
+                    best_neighbor = {node}
+                    best_neighbor_cost = absolute_cost
+                elif absolute_cost == best_neighbor_cost:
+                    best_neighbor.add(node)
+
+            for neighbor in best_neighbor:
+                self.frontier.remove(neighbor)
+
+            return best_neighbor
 
 #Objeto/Laberinto
 class Maze():
@@ -497,7 +511,7 @@ class Maze():
 
             self.cost += 1
 
-            nodes = frontier.remove(self.cost) if self.algorithm == 3 else frontier.remove()
+            nodes = frontier.remove(self.cost) if (self.algorithm == 3 or self.algorithm == 4)else frontier.remove()
 
             for node in nodes:
 
@@ -958,9 +972,3 @@ while running:
                                 pygame.display.update()
                                 break   
         pygame.display.update()
-                            
-
-            
-            
-            
-
