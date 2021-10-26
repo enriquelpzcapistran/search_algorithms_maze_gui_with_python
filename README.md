@@ -1,4 +1,9 @@
 # Search_algorithms_maze_gui_with_python
+
+Search Algorithms Maze Solver made with Python and Tkinter(GUI Python Library)
+ 
+We used numpy library in order to apply mini-max to the opponent IA decisions for the Connect 3 game. As well as using Tkinter and adding turtle library for the graphic representation, user interface and events for the game(point-and-click based game)
+
 # Algoritmos_de_busqueda_laberinto_gui_con_python
 
 ## Integrantes/Members
