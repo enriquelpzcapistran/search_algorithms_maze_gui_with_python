@@ -30,8 +30,8 @@ We used numpy library in order to apply mini-max to the opponent IA decisions fo
 ## Primero el mejor
 ![PrimeroElMejor](https://user-images.githubusercontent.com/10008363/137844073-691ff7d0-448b-46d7-818a-b366e0b03b1c.gif)
 
-## Conecta 3
-![Conecta3](https://user-images.githubusercontent.com/10008363/137843447-762cd57e-0272-4246-b355-0e85f8d0799a.gif)
+<!-- ## Conecta 3 
+![Conecta3](https://user-images.githubusercontent.com/10008363/137843447-762cd57e-0272-4246-b355-0e85f8d0799a.gif)-->
 
 ## Borrar
 ![Borrar](https://user-images.githubusercontent.com/10008363/137843048-f61c73ba-ec64-41f4-b34d-e5ddb7b21f2f.gif)
