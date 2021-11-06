@@ -29,7 +29,7 @@ class StackFrontier():
         return len(self.frontier) == 0 # Valida sin las lista de fronteras (Vecinos) es 0
 
     def remove(self):
-        if self.empty():
+        if self.empty
             raise Exception('Frontera vacia')
         else:
             node = self.frontier[-1] # Asignamos el último nodo que está en la lista (Pila)
@@ -157,10 +157,11 @@ class Maze():
 
             ###### INICIA CONECTA 3 ######
             #Colores del juego
-            BLUE = (0,0,255)
-            BLACK = (0,0,0)
-            RED = (255,0,0)
-            YELLOW = (255,255,0)
+            BLUE = (0,255,0)
+            BLACK = (0,0,0) #Café
+            COFFEE = (102,51,0)
+            RED = (204,102,0) #Color IA
+            YELLOW = (255,255,0) #Color Usuario (Amarillo)
             #Tamaño del tablero
             ROW_COUNT = 3
             COLUMN_COUNT = 3
@@ -347,15 +348,15 @@ class Maze():
             def draw_board(board2):
                 for c in range(COLUMN_COUNT):
                     for r in range(ROW_COUNT):
-                        pygame.draw.rect(screen, BLUE, (c*SQUARESIZE, r*SQUARESIZE+SQUARESIZE, SQUARESIZE, SQUARESIZE))
-                        pygame.draw.circle(screen, BLACK, (int(c*SQUARESIZE+SQUARESIZE/2), int(r*SQUARESIZE+SQUARESIZE+SQUARESIZE/2)), RADIUS)
+                        pygame.draw.rect(screen2, BLUE, (c*SQUARESIZE, r*SQUARESIZE+SQUARESIZE, SQUARESIZE+10, SQUARESIZE+10))
+                        pygame.draw.circle(screen2, BLACK, (int(c*SQUARESIZE+SQUARESIZE/2), int(r*SQUARESIZE+SQUARESIZE+SQUARESIZE/2)), RADIUS+4.5)
                 
                 for c in range(COLUMN_COUNT):
                     for r in range(ROW_COUNT):		
                         if board2[r][c] == PLAYER_PIECE:
-                            pygame.draw.circle(screen, RED, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
+                            pygame.draw.circle(screen2, RED, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
                         elif board2[r][c] == AI_PIECE: 
-                            pygame.draw.circle(screen, YELLOW, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
+                            pygame.draw.circle(screen2, YELLOW, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
                 pygame.display.update()
 
             board2 = create_board()
@@ -364,19 +365,22 @@ class Maze():
 
             pygame.init()
 
-            SQUARESIZE = 120
+            SQUARESIZE = 150
 
             width = COLUMN_COUNT * SQUARESIZE
             height = (ROW_COUNT+1) * SQUARESIZE
 
             size = (width, height)
-            RADIUS = int(SQUARESIZE/2 - 5)
+            RADIUS = int(SQUARESIZE/2 - 32)
+            size2 = (width + 150, height + 50)
+            size3 = (width + 50, height + 50)
 
-            screen = pygame.display.set_mode(size)
+            screen = pygame.display.set_mode(size2)
+            screen2 = pygame.display.set_mode(size3)
             draw_board(board2)
             pygame.display.update()
 
-            myfont = pygame.font.SysFont("monospace", 40)
+            myfont = pygame.font.SysFont("segoeuisemibold", 40)
 
             turn = random.randint(PLAYER, AI)
             firstTurn = turn
@@ -400,7 +404,7 @@ class Maze():
                             pygame.display.update()
 
                     if event.type == pygame.MOUSEBUTTONDOWN:
-                        pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
+                        pygame.draw.rect(screen, COFFEE, (0,0, width, SQUARESIZE))
                         
                         #Input del usuario
                         if turn == PLAYER:
@@ -637,10 +641,10 @@ w,h = size
 YELLOW = (255,255,0)
 WHITE = (255,255,255)
 GREEN = (0,255,0)
-BLACK = (0,0,0)
+BLACK = (33, 47, 60)
 RED = (255,0,0)
 ORANGE = (255,125,123)
-PURPLE = (81,61,130)
+PURPLE = (113, 125, 126)
 
 pygame.init()
 pygame.font.init()
