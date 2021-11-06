@@ -7,76 +7,72 @@ import math
 from pygame.draw import rect
 from pygame.constants import MOUSEBUTTONDOWN
 
-
-##################### CLASES #######################
-
-#Nodos Frontier
 class Node():
     def __init__(self, parent, state, action):
-        self.parent = parent #Nodo
-        self.state = state #Tupla
-        self.action = action #Tupla
+        self.parent = parent # Nodo
+        self.state = state # Posición
+        self.action = action # Movimiento que hizo el nodo (Arriba, Abajo, Izquierda, Derecha)
 
 #Profundidad
 class StackFrontier():
+
     def __init__(self):
-        self.frontier = []
+        self.frontier = [] # Lista de las fronteras del nodo (Vecinos)
         
     def add(self, node):
-        self.frontier.append(node)
+        self.frontier.append(node) #Agrega un nodo a la lista de fronteras (Vecinos)
 
     def contains_state(self, state):
-        return any(node.state == state for node in self.frontier)
+        return any(node.state == state for node in self.frontier) # Valida si el estado del nodo es igual a la meta
 
     def empty(self):
-        return len(self.frontier) == 0
+        return len(self.frontier) == 0 # Valida sin las lista de fronteras (Vecinos) es 0
 
     def remove(self):
-        if self.empty():
-            raise Exception('Fronteras vacías')
+        if self.empty
+            raise Exception('Frontera vacia')
         else:
-            node = self.frontier[-1]
-            self.frontier.remove(node)
+            node = self.frontier[-1] # Asignamos el último nodo que está en la lista (Pila)
+            self.frontier.remove(node) # Lo eliminamos de la frontera
             return [node]
 
 #Amplitud
 class QueueFrontier(StackFrontier):
     def remove(self):
         if self.empty():
-            raise Exception('Fronteras vacías')
+            raise Exception('Frontera vacia')
         else:
-            node = self.frontier[0] 
-            self.frontier.remove(node)
+            node = self.frontier[0] # Asignamos el primer nodo que está en la lista (Cola)
+            self.frontier.remove(node) # Lo eliminamos de la frontera
             return [node]
 
 #A*
 class ManhattanFrontier(StackFrontier):
     def remove(self, cost):
         if self.empty():
-            raise Exception('Fronteras vacías')
+            raise Exception('Frontera vacia')
         else:
-            best_neighbor = set()
-            best_neighbor_cost = 0
+            best_neighbor      = set() # Asignamos al mejor vecino
+            best_neighbor_cost = 0 # Asignamos el costo del vecino
             for node in self.frontier:
-                x,y = node.state
-                absolute_cost = cost + abs(x-9) + abs(y-9)
-                if len(best_neighbor) == 0 or absolute_cost < best_neighbor_cost:
-                    best_neighbor = {node}
-                    best_neighbor_cost = absolute_cost
+                x , y         = node.state # Asignamos las coordenadas del estado actual del nodo
+                absolute_cost = cost + abs( x - 9 ) + abs( y - 9 ) # Aplicamos la formula para obtener el costo del nodo actual
+                if len( best_neighbor ) == 0 or absolute_cost < best_neighbor_cost:
+                    best_neighbor      = { node } # Asignamos el nodo actual como el mejor vecino
+                    best_neighbor_cost = absolute_cost # Asignamos el costo nodo actual como el mejor costo del vecino
                 elif absolute_cost == best_neighbor_cost:
                     best_neighbor.add(node)
 
             for neighbor in best_neighbor:
-                self.frontier.remove(neighbor)
+                self.frontier.remove(neighbor) # Eliminamos al mejor vecino de la lista de frontera
 
-            return best_neighbor
-
+            return best_neighbor # Regresamos al mejor vecino
 
 #Primero el mejor
 class BestFirstFrontier(StackFrontier):
     def remove(self, cost):
         if self.empty():
-            raise Exception('Fronteras vacías')
+            raise Exception('Frontera vacia')
         else:
             best_neighbor = set()
             best_neighbor_cost = 0
@@ -94,58 +90,57 @@ class BestFirstFrontier(StackFrontier):
 
             return best_neighbor
 
-#Objeto/Laberinto
+# Laberinto
 class Maze():
-    def __init__(self, board, algorithm):
-        self.board = board
-        self.start = (0,0)
-        self.goal = (9,9)
-        self.algorithm = algorithm
-        self.walls = []
-        self.height = self.width = len(self.board)
 
-        for i in range(self.height):
+    def __init__( self , board, algorithm ):
+        self.board     = board
+        self.start     = ( 0 , 0 )
+        self.goal      = ( 9 , 9 )
+        self.algorithm = algorithm
+        self.walls     = []
+        self.height    = self.width = len( self.board )
+
+        for i in range( self.height ):
             row = []
-            for j in range(self.width):
-                if self.board[i][j] and (i,j) not in (self.start, self.goal):
+            for j in range( self.width ):
+                if self.board[i][j] and ( i , j ) not in ( self.start , self.goal ):
                     row.append(True)
                 else:
                     row.append(False)
             self.walls.append(row)
 
-
+    # Encuentra los vecinos que tiene la posición actual del nodo
     def find_neighbors(self, state):
 
-        self.neighbors = []
-
-        x,y = state
-
+        self.neighbors   = [] # Creamos una lista vacía de vecinos
+        x , y            = state  # Asignamos las coordenadas del estado actual del nodo
         possible_actions = [
-            ('down', (x, y+1)),
-            ('right', (x+1, y)),
-            ('up', (x, y-1)),
-            ('left', (x-1, y))
-        ]
+            ('down', ( x, y + 1 )),
+            ('right', ( x + 1, y )),
+            ('up', ( x, y - 1 )),
+            ('left', ( x - 1, y ))
+        ] # Acción y estados que pudiera tomar el nodo
 
-        random.shuffle(possible_actions)
+        random.shuffle(possible_actions) # Mezclamos las posibles acciones y estados
 
-        for action, result in possible_actions:
-            x, y = result
+        for action, result in possible_actions: # Descomponemos las posibles acciones en su nombre y estados que pudiera tomar el nodo
+            x, y = result # Pasamos el estado en coordenadas X Y
             try:
-                if not self.walls[x][y] and (0 <= x < self.width) and (0 <= y < self.height):
-                    self.neighbors.append((action, result))
+                if not self.walls[x][y] and (0 <= x < self.width) and (0 <= y < self.height): # Si en la coordenada X Y que nos tocó no hay muros y además las coordenadas X Y están entre 0 y 9
+                    self.neighbors.append((action, result)) # Va almacenando a los vecinos donde puede avanzar
             except IndexError:
                 continue
 
         return self.neighbors
 
+    # Resuelve la búsqueda
     def solve(self, show_steps):
 
-        self.cost = 0
-        
-        self.cells = list() if show_steps else set()
+        self.cost  = 0 # Para la heuristica tiene un costo de 0
+        self.cells = list() if show_steps else set() # Lista de celdas visitadas
 
-        start = Node(parent = None, state = self.start, action = None)
+        start = Node(parent = None, state = self.start, action = None) # Crea nodo con la posicion inicial ( 0 , 0 )
 
         if self.algorithm == 1:
             frontier = StackFrontier() #Profundidad
@@ -158,7 +153,8 @@ class Maze():
         elif self.algorithm == 5:
             pass                    #Conecta 3
 
-            
+            ''' ---------------------- INICIA CONECTA 3 ---------------------- '''
+
             ###### INICIA CONECTA 3 ######
             #Colores del juego
             BLUE = (0,255,0)
@@ -326,16 +322,12 @@ class Maze():
                             break
                     return column, value
                 
-
-
-
             def get_valid_locations(board2):
                 valid_locations = []
                 for col in range(COLUMN_COUNT):
                     if is_valid_location(board2, col):
                         valid_locations.append(col)
                 return valid_locations
-
 
             def pick_best_move(board2, piece):
                 valid_locations = get_valid_locations(board2)
@@ -353,7 +345,6 @@ class Maze():
                         
                 return best_col
 
-
             def draw_board(board2):
                 for c in range(COLUMN_COUNT):
                     for r in range(ROW_COUNT):
@@ -367,7 +358,6 @@ class Maze():
                         elif board2[r][c] == AI_PIECE: 
                             pygame.draw.circle(screen2, YELLOW, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
                 pygame.display.update()
-
 
             board2 = create_board()
             print_board(board2)
@@ -489,11 +479,9 @@ class Maze():
 
                         if turnNum == 6:
                             pygame.time.wait(3000)
-
-                        
+     
                         turn += 1
                         turn = turn % 2
-
                         
                         if game_over:
                             if winner == False:
@@ -502,46 +490,47 @@ class Maze():
                                 game_over = True
                                 pygame.time.wait(3000)
 
+            ''' ---------------------- TERMINA CONECTA 3 ---------------------- '''
 
-
-
-
-
-        frontier.add(start)
+        frontier.add(start) # Agrega nodo que contiene el estado incial (0, 0)
         
-        while True:
-            if frontier.empty():
-                return None
+        while True: # Iteramos hasta llegar a uno de los 3 caso bases
 
-            self.cost += 1
+            if frontier.empty(): # Valida si las fronteras están vacías
+                return None # Caso base 1: La lista de frontera se encuentra vacía
 
-            nodes = frontier.remove(self.cost) if (self.algorithm == 3 or self.algorithm == 4)else frontier.remove()
+            self.cost += 1 # Incrementamos el costo de la heuristica
+
+            # Se elimina el costo de heuristica para A* y Primero el mejor,
+            # en el caso de los ciegos se elimina de la frontera el nodo que se visitará y se le asigna a la variable
+            nodes = frontier.remove(self.cost) if (self.algorithm == 3 or self.algorithm == 4) else frontier.remove()
 
             for node in nodes:
 
-                if self.goal == node.state:
-                    moves = []
-                    while node.parent != None:
-                        moves.append(node.state)
-                        node = node.parent
-                    moves.reverse()
+                if self.goal == node.state: # Verificamos si el estado actual del nodo es igual a la meta  "Posición (9, 9)"
+                    moves = [] # Lista para almacenar los movimientos
+                    while node.parent != None: # Validamos que el nodo padre no sea nulo
+                        moves.append(node.state) # Almacenamos el estado del nodo actual
+                        node = node.parent # Asignamos el nodo padre a la variable nodo
+                    moves.reverse() # Invertimos el orden de la lista, ya que se estuvo agregando el primer elemento que se agregó fue el último estado visitado
                     if show_steps:
-                        return (self.cells, moves)
+                        return (self.cells, moves) # Caso base 2: Regresamos la lista de nodos visitados y sus movimientos
                     else:
-                        return moves
+                        return moves # Caso base 3: Regresamos la lista de movimientos
 
-                if show_steps and node.state not in self.cells:
+                # Si la opción mostrar pasos (Checkbox) es verdadera
+                #y el estado del nodo no se encuentra en la lista de nodos visitados
+                if show_steps and node.state not in self.cells:  
                     self.cells.append(node.state)
                 if not show_steps:
-                    self.cells.add(node.state)
+                    self.cells.add(node.state) # Agrega el estado del nodo a la lista de celdas visitadas
 
+                for action, state in self.find_neighbors(node.state): # Obtiene las posiciones vecinas del estado actual del nodo
+                    if not frontier.contains_state(self.goal) and state not in self.cells: # Valida si el estado obteniedo no es la meta y no es un estado que ya se recorrió
+                        child = Node(parent = node, state = state, action = action) # Crea un nuevo nodo con el estado y acción obtenida en la búsqueda de vecinos
+                        frontier.add(child) # Agrega los nodos vecinos a la frontera
 
-                for action, state in self.find_neighbors(node.state):
-                    if not frontier.contains_state(self.goal) and state not in self.cells:
-                        child = Node(parent = node, state = state, action = action)
-                        frontier.add(child)
-
-#Menu(Dropdown) de Algoritmos de Búsqueda
+#Menú ( Dropdown ) de Algoritmos de Búsqueda y Conecta 3
 class DropDown():
 
     def __init__(self, x,y,w,h,color, highlight_color, font, options, selected = 0):
@@ -580,8 +569,6 @@ class DropDown():
                 rect = self.rect.copy()
                 rect.y += (i+1) * self.rect.height
                 pygame.draw.rect(surface, (0,0,0), rect)
-
-
         
     def update(self, events):
         mpos = pygame.mouse.get_pos()
@@ -609,7 +596,7 @@ class DropDown():
 
         return -1
 
-#Opción de mostrar animación completa o no(Checkbox)
+# Opción para mostrar animación completa o no ( Checkbox )
 class Checkbox():
     def __init__(self, rect, text, font):
         self.rect = rect
@@ -629,7 +616,6 @@ class Checkbox():
             pygame.draw.rect(surface, self.filled_color, self.fill_rect)
         msg = self.font.render(self.text, 1, (255,255,255))
         surface.blit(msg, (self.rect.x + 30, self.rect.y + 2.5))
-        
 
     def update(self, events):
 
@@ -647,10 +633,8 @@ class Checkbox():
                     break
 
         return self.selected
-        
 
 ################# Programa Principal #####################
-
 size = (900,600)
 w,h = size
 
@@ -808,7 +792,6 @@ while running:
 
                     else:
                         #Demasiados Muros
-                        
                         #rect = pygame.Rect(600,565,100,50)
                         msg = BTN_TEXT.render('Advertencia 3(Demasiadas paredes)', 1, BLACK)
                         #screen.blit(msg, (rect.x,rect.y))
